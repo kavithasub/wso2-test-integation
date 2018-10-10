@@ -39,7 +39,7 @@ from const_common import TEST_PLAN_PROPERTY_FILE_NAME, INFRA_PROPERTY_FILE_NAME,
     CARBON_NAME, VALUE_TAG, DEFAULT_ORACLE_SID, MYSQL_DB_ENGINE, ORACLE_DB_ENGINE, MSSQL_DB_ENGINE
 
 
-from const_ei import DB_META_DATA, DIST_POM_PATH
+#from const_ei import DB_META_DATA, DIST_POM_PATH
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -348,6 +348,7 @@ def ignore_dirs(directories):
         return set(ignored_names)
     return _ignore_patterns
 
+
 ## These methods should be converted using inheritance
 ## and thereafter remove the code block from here
 # def copy_file(source, target):
@@ -476,6 +477,7 @@ def build_module(module_path):
                         cwd=module_path)
     logger.info('Module build is completed. Module: ' + str(module_path))
 
+
 ## These methods should be converted using inheritance
 ## and thereafter remove the code block from here
 # def save_log_files():
@@ -567,7 +569,7 @@ def get_relative_path_of_dist_storage(xml_path):
                 return parent_node.getElementsByTagName("relativePath")[0].firstChild.nodeValue
     return None
 
-#TODO: there is a perfomnce issue observed here as download from jenkins not checking if already exit
+
 def get_latest_released_dist():
     """Get the latest released distribution
     """
