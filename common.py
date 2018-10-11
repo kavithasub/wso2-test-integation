@@ -33,13 +33,10 @@ from xml.dom import minidom
 import errno
 from subprocess import Popen, PIPE
 
-
 from const_common import TEST_PLAN_PROPERTY_FILE_NAME, INFRA_PROPERTY_FILE_NAME, LOG_FILE_NAME, PRODUCT_STORAGE_DIR_NAME, \
     DEFAULT_DB_USERNAME, LOG_STORAGE, NS, ZIP_FILE_EXTENSION, TEST_OUTPUT_DIR_NAME, SURFACE_PLUGIN_ARTIFACT_ID, \
     CARBON_NAME, VALUE_TAG, DEFAULT_ORACLE_SID, MYSQL_DB_ENGINE, ORACLE_DB_ENGINE, MSSQL_DB_ENGINE
 
-
-#from const_ei import DB_META_DATA, DIST_POM_PATH
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -92,7 +89,8 @@ database_config = {}
 storage_dir_abs_path = None
 use_custom_testng_file=None
 
-def read_proprty_files():
+
+def read_property_files():
     global db_engine
     global db_engine_version
     global git_repo_url
@@ -189,13 +187,6 @@ def validate_property_readings():
         return False
     else:
         return True
-
-
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-def get_db_meta_data(argument):
-    switcher = DB_META_DATA
-    return switcher.get(argument, False)
 
 
 def construct_url(prefix):
@@ -349,33 +340,13 @@ def ignore_dirs(directories):
     return _ignore_patterns
 
 
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-# def copy_file(source, target):
-#     """Copy the source file to the target.
-#     """
-#     try:
-#         if sys.platform.startswith('win'):
-#             source = winapi_path(source)
-#             target = winapi_path(target)
-#
-#         if os.path.isdir(source):
-#             shutil.copytree(source, target, ignore=ignore_dirs((IGNORE_DIR_TYPES[product_id])))
-#         else:
-#             shutil.copy(source, target)
-#     except OSError as e:
-#         print('Directory not copied. Error: %s' % e)
-
-
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-def get_dist_name():
+def get_dist_name(path):
     """Get the product name by reading distribution pom.
     """
     global dist_name
     global dist_zip_name
     global product_version
-    dist_pom_path = Path(workspace + "/" + product_id + "/" + DIST_POM_PATH[product_id])
+    dist_pom_path = Path(workspace + "/" + product_id + "/" + path)
     if sys.platform.startswith('win'):
         dist_pom_path = winapi_path(dist_pom_path)
     ET.register_namespace('', NS['d'])
@@ -389,12 +360,13 @@ def get_dist_name():
     return dist_name
 
 
-def setup_databases(db_names):
+def setup_databases(db_names, meta_data):
     """Create required databases.
     """
     base_path = Path(workspace + "/" + PRODUCT_STORAGE_DIR_NAME + "/" + dist_name + "/" )
     engine = db_engine.upper()
-    db_meta_data = get_db_meta_data(engine)
+    #db_meta_data = get_db_meta_data(engine)
+    db_meta_data = meta_data
     if db_meta_data:
         databases = db_meta_data["DB_SETUP"][product_id]
         if databases:
@@ -439,13 +411,11 @@ def setup_databases(db_names):
         raise Exception("Database meta data is not defined in the constant file")
 
 
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-def construct_db_config():
+def construct_db_config(meta_data):
     """Use properties which are get by reading property files and construct the database config object which will use
     when configuring the databases.
     """
-    db_meta_data = get_db_meta_data(db_engine.upper())
+    db_meta_data = meta_data
     if db_meta_data:
         database_config["driver_class_name"] = db_meta_data["driverClassName"]
         database_config["password"] = db_password
@@ -476,38 +446,6 @@ def build_module(module_path):
                          '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'],
                         cwd=module_path)
     logger.info('Module build is completed. Module: ' + str(module_path))
-
-
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-# def save_log_files():
-#     log_storage = Path(workspace + "/" + LOG_STORAGE)
-#     if not Path.exists(log_storage):
-#         Path(log_storage).mkdir(parents=True, exist_ok=True)
-#     log_file_paths = ARTIFACT_REPORTS_PATHS[product_id]
-#     if log_file_paths:
-#         for file in log_file_paths:
-#             absolute_file_path = Path(workspace + "/" + product_id + "/" + file)
-#             if Path.exists(absolute_file_path):
-#                 copy_file(absolute_file_path, log_storage)
-#             else:
-#                 logger.error("File doesn't contain in the given location: " + str(absolute_file_path))
-
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-# def save_test_output():
-#     log_folder = Path(workspace + "/" + TEST_OUTPUT_DIR_NAME)
-#     if Path.exists(log_folder):
-#         shutil.rmtree(log_folder)
-#     log_file_paths = ARTIFACT_REPORTS_PATHS[product_id]
-#     for key, value in log_file_paths.items():
-#         for file in value:
-#             absolute_file_path = Path(workspace + "/" + product_id + "/" + file)
-#             if Path.exists(absolute_file_path):
-#                 log_storage = Path(workspace + "/" + TEST_OUTPUT_DIR_NAME + "/" + key)
-#                 copy_file(absolute_file_path, log_storage)
-#             else:
-#                 logger.error("File doesn't contain in the given location: " + str(absolute_file_path))
 
 
 def clone_repo():
@@ -634,60 +572,21 @@ def replace_file(source, destination):
     shutil.move(source, destination)
 
 
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-# def set_custom_testng():
-#     if use_custom_testng_file == "TRUE":
-#         testng_source = Path(workspace + "/" + "testng.xml")
-#         testng_destination = Path(workspace + "/" + product_id + "/" + TESTNG_DIST_XML_PATH)
-#         testng_server_mgt_source = Path(workspace + "/" + "testng-server-mgt.xml")
-#         testng_server_mgt_destination = Path(workspace + "/" + product_id + "/" + TESTNG_SERVER_MGT_DIST)
-#         # replace testng source
-#         replace_file(testng_source, testng_destination)
-#         # replace testng server mgt source
-# replace_file(testng_server_mgt_source, testng_server_mgt_destination)
-
-
-## These methods should be converted using inheritance
-## and thereafter remove the code block from here
-# def build_snapshot_dist():
-#     """Build the distribution
-#     """
-#     zip_name = dist_name + ZIP_FILE_EXTENSION
-#     try:
-#         snapshot_build_dir_path = Path(workspace + "/" + product_id + "/")
-#         subprocess.call(['mvn', 'clean', 'install', '-Dmaven.test.skip=true', '-fae', '-B',
-#                          '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'], cwd=snapshot_build_dir_path)
-#         logger.info("Snapshot distribution build successfully")
-#     except Exception as e:
-#         logger.error("Error occurred while build the distribution",
-#                      exc_info=True)
-#
-#     # copy the zip file to storage
-#     storage_dir_path = Path(workspace + "/" + PRODUCT_STORAGE_DIR_NAME)
-#     built_dir_path = Path(workspace + "/" + product_id + "/" + DISTRIBUTION_PATH[product_id])
-#     built_zip_abs_path = Path(built_dir_path / zip_name)
-#
-#     if os.path.exists(built_zip_abs_path):
-#         shutil.copy2(built_zip_abs_path, storage_dir_path)
-#         os.remove(built_zip_abs_path)
-#     else:
-#         print("The file does not exist")
-
-
-def extract_product(path):
+def extract_product(dir_path, zip_path ):
     """Extract the zip file(product zip) which is located in the given @path.
     """
-    if Path.exists(path):
+    storage_dir_abs_path = dir_path
+    storage_zip_abs_path = zip_path
+    if Path.exists(storage_zip_abs_path):
         logger.info("Extracting the product  into " + str(storage_dir_abs_path))
         if sys.platform.startswith('win'):
-            with ZipFileLongPaths(path, "r") as zip_ref:
+            with ZipFileLongPaths(storage_zip_abs_path, "r") as zip_ref:
                 zip_ref.extractall(storage_dir_abs_path)
         else:
-            with ZipFile(str(path), "r") as zip_ref:
+            with ZipFile(str(storage_zip_abs_path), "r") as zip_ref:
                 zip_ref.extractall(storage_dir_abs_path)
     else:
-        raise FileNotFoundError("File is not found to extract, file path: " + str(path))
+        raise FileNotFoundError("File is not found to extract, file path: " + str(storage_zip_abs_path))
 
 
 def attach_jolokia_agent(spath):
@@ -753,3 +652,28 @@ def compress_distribution(distribution_path, root_dir):
         Path(distribution_path).mkdir(parents=True, exist_ok=True)
 
     shutil.make_archive(distribution_path, "zip", root_dir)
+
+
+def build_snapshot_dist(dist_path):
+    """Build the distribution
+    """
+    zip_name = dist_name + ZIP_FILE_EXTENSION
+    try:
+        snapshot_build_dir_path = Path(workspace + "/" + product_id + "/")
+        subprocess.call(['mvn', 'clean', 'install', '-Dmaven.test.skip=true', '-B',
+                         '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'], cwd=snapshot_build_dir_path)
+    except Exception as e:
+        logger.error("Error occurred while build the distribution",
+                     exc_info=True)
+
+    # copy the zip file to storage
+    logger.info("Moving the Snapshot built file to :" + PRODUCT_STORAGE_DIR_NAME)
+    storage_dir_path = Path(workspace + "/" + PRODUCT_STORAGE_DIR_NAME)
+    snapshot_target_path = Path(workspace + "/" + product_id + "/" + dist_path)
+    snapshot_zip_abs_path = Path(snapshot_target_path / zip_name)
+
+    if os.path.exists(snapshot_zip_abs_path):
+        shutil.copy2(snapshot_zip_abs_path, storage_dir_path)
+        os.remove(snapshot_zip_abs_path)
+    else:
+        print("The file does not exist")

@@ -33,8 +33,10 @@ import common as cm
 import errno
 from subprocess import Popen, PIPE
 
-from const_ei import DB_META_DATA, ARTIFACT_REPORTS_PATHS, DIST_POM_PATH, LIB_PATH, M2_PATH, INTEGRATION_PATH, IGNORE_DIR_TYPES, \
-    TESTNG_DIST_XML_PATHS, DISTRIBUTION_PATH, DATASOURCE_PATHS, POM_FILE_PATHS, INTEGRATOR, BP, BROKER, ANALYTICS, MICRO_INTG
+
+from const_ei import DB_META_DATA, ARTIFACT_REPORTS_PATHS, DIST_POM_PATH, LIB_PATH, M2_PATH, \
+    INTEGRATION_PATH, IGNORE_DIR_TYPES, TESTNG_DIST_XML_PATHS, DISTRIBUTION_PATH, DATASOURCE_PATHS, POM_FILE_PATHS, \
+    INTEGRATOR, BP, BROKER, ANALYTICS, MICRO_INTG
 
 from const_common import NS, ZIP_FILE_EXTENSION, CARBON_NAME, VALUE_TAG, SURFACE_PLUGIN_ARTIFACT_ID, TEST_PLAN_PROPERTY_FILE_NAME, \
     INFRA_PROPERTY_FILE_NAME, LOG_FILE_NAME, PRODUCT_STORAGE_DIR_NAME, DEFAULT_DB_USERNAME, LOG_STORAGE, TEST_OUTPUT_DIR_NAME, \
@@ -42,13 +44,6 @@ from const_common import NS, ZIP_FILE_EXTENSION, CARBON_NAME, VALUE_TAG, SURFACE
 
 
 
-#workspace = None
-#dist_name = None
-#product_id = None
-test_mode = None
-#product_version = None
-#database_config = {}
-storage_dir_abs_path = None
 database_names = []
 db_engine = None
 sql_driver_location = None
@@ -61,7 +56,7 @@ def add_distribution_to_m2(storage, name, product_version):
     """Add the distribution zip into local .m2.
     """
     home = Path.home()
-    m2_rel_path = ".m2/repository/org/wso2/" + M2_PATH[product_id]
+    m2_rel_path = ".m2/repository/org/wso2/" + M2_PATH[cm.product_id]
     linux_m2_path = home / m2_rel_path / product_version / name
     windows_m2_path = Path("/Documents and Settings/Administrator/" + m2_rel_path + "/" + product_version + "/" + name)
     if sys.platform.startswith('win'):
@@ -80,7 +75,7 @@ def add_distribution_to_m2(storage, name, product_version):
 def modify_datasources():
     """Modify datasources files which are defined in the const.py. DB ulr, uname, pwd, driver class values are modifying.
     """
-    profiles = DATASOURCE_PATHS[product_id]
+    profiles = DATASOURCE_PATHS[cm.product_id]
     for key, value in profiles.items():
         for data_source in value:
             file_path = Path(storage_dist_abs_path / data_source)
@@ -103,64 +98,55 @@ def modify_datasources():
                         password = configuration.find('password')
                         validation_query = configuration.find('validationQuery')
                         drive_class_name = configuration.find('driverClassName')
-                        if MYSQL_DB_ENGINE == database_config['db_engine'].upper():
-                            url.text = url.text.replace(url.text, database_config[
+                        if MYSQL_DB_ENGINE == cm.database_config['db_engine'].upper():
+                            url.text = url.text.replace(url.text, cm.database_config[
                                 'url'] + "/" + database_name + "?autoReconnect=true&useSSL=false&requireSSL=false&"
                                                                "verifyServerCertificate=false")
-                            user.text = user.text.replace(user.text, database_config['user'])
-                        elif ORACLE_DB_ENGINE == database_config['db_engine'].upper():
-                            url.text = url.text.replace(url.text, database_config['url'] + "/" + DEFAULT_ORACLE_SID)
+                            user.text = user.text.replace(user.text, cm.database_config['user'])
+                        elif ORACLE_DB_ENGINE == cm.database_config['db_engine'].upper():
+                            url.text = url.text.replace(url.text, cm.database_config['url'] + "/" + DEFAULT_ORACLE_SID)
                             user.text = user.text.replace(user.text, database_name)
                             validation_query.text = validation_query.text.replace(validation_query.text,
                                                                                   "SELECT 1 FROM DUAL")
-                        elif MSSQL_DB_ENGINE == database_config['db_engine'].upper():
+                        elif MSSQL_DB_ENGINE == cm.database_config['db_engine'].upper():
                             url.text = url.text.replace(url.text,
-                                                        database_config['url'] + ";" + "databaseName=" + database_name)
-                            user.text = user.text.replace(user.text, database_config['user'])
+                                                        cm.database_config['url'] + ";" + "databaseName=" + database_name)
+                            user.text = user.text.replace(user.text, cm.database_config['user'])
                         else:
-                            url.text = url.text.replace(url.text, database_config['url'] + "/" + database_name)
-                            user.text = user.text.replace(user.text, database_config['user'])
-                        password.text = password.text.replace(password.text, database_config['password'])
+                            url.text = url.text.replace(url.text, cm.database_config['url'] + "/" + database_name)
+                            user.text = user.text.replace(user.text, cm.database_config['user'])
+                        password.text = password.text.replace(password.text, cm.database_config['password'])
                         drive_class_name.text = drive_class_name.text.replace(drive_class_name.text,
-                                                                              database_config['driver_class_name'])
+                                                                              cm.database_config['driver_class_name'])
                         database_names.append(database_name)
             artifact_tree.write(file_path)
 
 
-
-def configure_product(name, id, db_config, ws, product_version):
+def configure_product():
     try:
-        global dist_name
-        global product_id
-        global database_config
-        global workspace
         global target_dir_abs_path
         global storage_dist_abs_path
         global storage_dir_abs_path
 
-        dist_name = name
-        product_id = id
-        database_config = db_config
-        workspace = ws
-        zip_name = str(dist_name) + ZIP_FILE_EXTENSION
+        zip_name = dist_name + ZIP_FILE_EXTENSION
 
-        storage_dir_abs_path = Path(workspace + "/" + PRODUCT_STORAGE_DIR_NAME)
-        target_dir_abs_path = Path(workspace + "/" + product_id + "/" + DISTRIBUTION_PATH[product_id])
+        storage_dir_abs_path = Path(cm.workspace + "/" + PRODUCT_STORAGE_DIR_NAME)
+        target_dir_abs_path = Path(cm.workspace + "/" + cm.product_id + "/" + DISTRIBUTION_PATH[cm.product_id])
         storage_zip_abs_path = Path(storage_dir_abs_path / zip_name)
         storage_dist_abs_path = Path(storage_dir_abs_path / dist_name)
         configured_dist_storing_loc = Path(target_dir_abs_path / dist_name)
         script_name = [INTEGRATOR, BP, BROKER, ANALYTICS, MICRO_INTG]
 
-        cm.extract_product(storage_zip_abs_path)
+        cm.extract_product(storage_dir_abs_path, storage_zip_abs_path)
         for scripts in script_name:
             script_path = Path(storage_dist_abs_path / Path(scripts))
             cm.attach_jolokia_agent(script_path)
 
-        cm.copy_jar_file(Path(database_config['sql_driver_location']), Path(storage_dist_abs_path / LIB_PATH[product_id]))
+        cm.copy_jar_file(Path(cm.database_config['sql_driver_location']), Path(storage_dist_abs_path / LIB_PATH[cm.product_id]))
         modify_datasources()
         os.remove(str(storage_zip_abs_path))
         cm.compress_distribution(configured_dist_storing_loc, storage_dir_abs_path)
-        add_distribution_to_m2(storage_dir_abs_path, dist_name, product_version)
+        add_distribution_to_m2(storage_dir_abs_path, dist_name, cm.product_version)
         shutil.rmtree(configured_dist_storing_loc, onerror=cm.on_rm_error)
         return database_names
     except FileNotFoundError as e:
@@ -178,7 +164,7 @@ def configure_product(name, id, db_config, ws, product_version):
 # configure_product method and call the modify_pom_files method.
 def modify_pom_files():
     for pom in POM_FILE_PATHS:
-        file_path = Path(workspace + "/" + product_id + "/" + pom)
+        file_path = Path(cm.workspace + "/" + cm.product_id + "/" + pom)
         if sys.platform.startswith('win'):
             file_path = cm.winapi_path(file_path)
         logger.info("Modifying pom file: " + str(file_path))
@@ -207,24 +193,17 @@ def modify_pom_files():
 ## This method should be converted using inheritance
 ## and thereafter remove/modify the code block from here
 def save_log_files():
-    log_storage = Path(workspace + "/" + LOG_STORAGE)
+    log_storage = Path(cm.workspace + "/" + LOG_STORAGE)
     if not Path.exists(log_storage):
         Path(log_storage).mkdir(parents=True, exist_ok=True)
-    log_file_paths = ARTIFACT_REPORTS_PATHS[product_id]
+    log_file_paths = ARTIFACT_REPORTS_PATHS[cm.product_id]
     if log_file_paths:
         for file in log_file_paths:
-            absolute_file_path = Path(workspace + "/" + product_id + "/" + file)
+            absolute_file_path = Path(cm.workspace + "/" + cm.product_id + "/" + file)
             if Path.exists(absolute_file_path):
                 copy_file(absolute_file_path, log_storage)
             else:
                 logger.error("File doesn't contain in the given location: " + str(absolute_file_path))
-
-
-## This method should be converted using inheritance
-## and thereafter remove/modify the code block from here
-# def get_db_meta_data(argument):
-#     switcher = DB_META_DATA
-#     return switcher.get(argument, False)
 
 
 ## This method should be converted using inheritance
@@ -238,7 +217,7 @@ def copy_file(source, target):
             target = cm.winapi_path(target)
 
         if os.path.isdir(source):
-            shutil.copytree(source, target, ignore=cm.ignore_dirs((IGNORE_DIR_TYPES[product_id])))
+            shutil.copytree(source, target, ignore=cm.ignore_dirs((IGNORE_DIR_TYPES[cm.product_id])))
         else:
             shutil.copy(source, target)
     except OSError as e:
@@ -249,45 +228,20 @@ def copy_file(source, target):
 ## This method should be converted using inheritance
 ## and thereafter remove/modify the code block from here
 def save_test_output():
-    log_folder = Path(workspace + "/" + TEST_OUTPUT_DIR_NAME)
-    if Path.exists(log_folder):
-        shutil.rmtree(log_folder)
-    log_file_paths = ARTIFACT_REPORTS_PATHS[product_id]
-    for key, value in log_file_paths.items():
+    report_folder = Path(cm.workspace + "/" + TEST_OUTPUT_DIR_NAME)
+    if Path.exists(report_folder):
+        shutil.rmtree(report_folder)
+    report_file_paths = ARTIFACT_REPORTS_PATHS[cm.product_id]
+    for key, value in report_file_paths.items():
         for file in value:
-            absolute_file_path = Path(workspace + "/" + product_id + "/" + file)
+            absolute_file_path = Path(cm.workspace + "/" + cm.product_id + "/" + file)
             if Path.exists(absolute_file_path):
-                log_storage = Path(workspace + "/" + TEST_OUTPUT_DIR_NAME + "/" + key)
-                copy_file(absolute_file_path, log_storage)
+                report_storage = Path(cm.workspace + "/" + TEST_OUTPUT_DIR_NAME + "/" + key)
+                copy_file(absolute_file_path, report_storage)
+                logger.info("Report successfully copied")
             else:
                 logger.error("File doesn't contain in the given location: " + str(absolute_file_path))
 
-
-## This method should be converted using inheritance
-## and thereafter remove/modify the code block from here
-def build_snapshot_dist():
-    """Build the distribution
-    """
-    zip_name = dist_name + ZIP_FILE_EXTENSION
-    try:
-        snapshot_build_dir_path = Path(workspace + "/" + product_id + "/")
-        subprocess.call(['mvn', 'clean', 'install', '-Dmaven.test.skip=true', '-fae', '-B',
-                         '-Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn'], cwd=snapshot_build_dir_path)
-        logger.info("Snapshot distribution build successfully")
-    except Exception as e:
-        logger.error("Error occurred while build the distribution",
-                     exc_info=True)
-
-    # copy the zip file to storage
-    storage_dir_path = Path(workspace + "/" + PRODUCT_STORAGE_DIR_NAME)
-    built_dir_path = Path(workspace + "/" + product_id + "/" + DISTRIBUTION_PATH[product_id])
-    built_zip_abs_path = Path(built_dir_path / zip_name)
-
-    if os.path.exists(built_zip_abs_path):
-        shutil.copy2(built_zip_abs_path, storage_dir_path)
-        os.remove(built_zip_abs_path)
-    else:
-        print("The file does not exist")
 
 ## This method should be converted using inheritance
 ## and thereafter remove/modify the code block from here
@@ -303,6 +257,9 @@ def build_snapshot_dist():
 # replace_file(testng_server_mgt_source, testng_server_mgt_destination)
 
 
+def get_db_meta_data(argument):
+    switcher = DB_META_DATA
+    return switcher.get(argument, False)
 
 
 
@@ -310,51 +267,60 @@ def main():
     try:
         global logger
         global dist_name
+
         logger = cm.function_logger(logging.DEBUG, logging.DEBUG)
+
         print(str(sys.version_info))
         if sys.version_info < (3, 6):
             raise Exception(
                 "To run run-intg-test.py script you must have Python 3.6 or latest. Current version info: " + sys.version_info)
-        cm.read_proprty_files()
+        cm.read_property_files()
         if not cm.validate_property_readings():
             raise Exception(
                 "Property file doesn't have mandatory key-value pair. Please verify the content of the property file "
                 "and the format")
+
+
+        # get properties assigned to local variables
+        pom_path = DIST_POM_PATH[cm.product_id]
+        engine = cm.db_engine.upper()
+        db_meta_data = get_db_meta_data(engine)
+        distribution_path = DISTRIBUTION_PATH[cm.product_id]
+
+
         # construct database configuration
-        cm.construct_db_config()
+        cm.construct_db_config(db_meta_data)
         # clone the repository
         cm.clone_repo()
         # set the custom testng.xml or the product testng.xml
         #set_custom_testng()
 
-        #--Removing DEBUG test_mode
-
-        if test_mode == "RELEASE":
-            cm.checkout_to_tag(cm.get_latest_tag_name(product_id))
-            dist_name = cm.get_dist_name()
+        if cm.test_mode == "RELEASE":
+            cm.checkout_to_tag(cm.get_latest_tag_name(cm.product_id))
+            dist_name = cm.get_dist_name(pom_path)
             cm.get_latest_released_dist()
-        elif test_mode == "SNAPSHOT":
-            dist_name = cm.get_dist_name()
-        #++Adding a method to build distribution, and remove the latest_stable_distribution
-            build_snapshot_dist()
-        elif test_mode == "WUM":
+        elif cm.test_mode == "SNAPSHOT":
+            dist_name = cm.get_dist_name(pom_path)
+            # build the distribution for snapshot test mode
+            cm.build_snapshot_dist(distribution_path)
+        elif cm.test_mode == "WUM":
             # todo after identify specific steps that are related to WUM, add them to here
-            dist_name = cm.get_dist_name()
+            dist_name = cm.get_dist_name(pom_path)
             logger.info("WUM specific steps are empty")
 
         # populate databases
-
-        db_names = configure_product(cm.dist_name, cm.product_id, cm.database_config, cm.workspace, cm.product_version)
+        db_names = configure_product()
         if db_names is None or not db_names:
             raise Exception("Failed the product configuring")
-        cm.setup_databases(db_names)
-        if product_id == "product-apim":
-            module_path = Path(workspace + "/" + product_id + "/" + 'modules/api-import-export')
+
+        cm.setup_databases(db_names, db_meta_data)
+        if cm.product_id == "product-apim":
+            module_path = Path(cm.workspace + "/" + cm.product_id + "/" + 'modules/api-import-export')
             cm.build_module(module_path)
-        intg_module_path = Path(workspace + "/" + product_id + "/" + INTEGRATION_PATH[product_id])
-        #cm.build_module(intg_module_path)
-        #cm.save_test_output()
-        #cm.create_output_property_fle()
+        intg_module_path = Path(cm.workspace + "/" + cm.product_id + "/" + INTEGRATION_PATH[cm.product_id])
+        cm.build_module(intg_module_path)
+        save_test_output()
+        cm.create_output_property_fle()
     except Exception as e:
         logger.error("Error occurred while running the run-intg.py script", exc_info=True)
     except BaseException as e:

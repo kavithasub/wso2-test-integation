@@ -41,7 +41,7 @@ DISTRIBUTION_PATH = {"product-apim": "modules/distribution/product/target",
                      "product-ei": "distribution/target"}
 INTEGRATION_PATH = {"product-apim": "modules/integration",
                     "product-is": "modules/integration",
-                    "product-ei": "integration"}
+                    "product-ei": "integration/mediation-tests/tests-mediator-1/"}
 POM_FILE_PATHS = {"product-is": "",
                   "product-apim": "",
                   "product-ei": ""}
@@ -63,29 +63,8 @@ TESTNG_DIST_XML_PATHS = {"integration/business-process-tests/pom.xml",
 
 ARTIFACT_REPORTS_PATHS = {"product-apim": [],
                           "product-is": [],
-                          "product-ei": {"mediation-tests-service": ["integration/mediation-tests/tests-service/target/surefire-reports",
-                                                                     "integration/mediation-tests/tests-service/target/logs/automation.log"],
-                                         "mediation-tests-transport": ["integration/mediation-tests/tests-transport/target/surefire-reports",
-                                                                       "integration/mediation-tests/tests-transport/target/logs/automation.log"],
-                                         "mediation-tests-mediator-1": ["integration/mediation-tests/tests-mediator-1/target/surefire-reports",
-                                                                        "integration/mediation-tests/tests-mediator-1/target/logs/automation.log"],
-                                         "mediation-tests-mediator-2": ["integration/mediation-tests/tests-mediator-2/target/surefire-reports",
-                                                                        "integration/mediation-tests/tests-mediator-2/target/logs/automation.log"],
-                                         "mediation-tests-patches": ["integration/mediation-tests/tests-patches/target/surefire-reports",
-                                                                     "integration/mediation-tests/tests-patches/target/logs/automation.log"],
-                                         "mediation-tests-other": ["integration/mediation-tests/tests-other/target/surefire-reports",
-                                                                   "integration/mediation-tests/tests-other/target/logs/automation.log"],
-                                         "business-process-bpel": ["integration/business-process-tests/tests-integration/bpel/target/surefire-reports",
-                                                                   "integration/business-process-tests/tests-integration/bpel/target/logs/automation.log"],
-                                         "business-process-bpmn": ["integration/business-process-tests/tests-integration/bpmn/target/surefire-reports",
-                                                                   "integration/business-process-tests/tests-integration/bpmn/target/logs/automation.log"],
-                                         "business-process-humantasks": ["integration/business-process-tests/tests-integration/humantasks/target/surefire-reports",
-                                                                         "integration/business-process-tests/tests-integration/humantasks/target/logs/automation.log"],
-                                         "business-process-taskcoordination": ["integration/business-process-tests/tests-integration/taskcoordination/target/surefire-reports",
-                                                                               "integration/business-process-tests/tests-integration/taskcoordination/target/logs/automation.log"],
-                                         "dataservice-hosting-integration-tests": ["integration/dataservice-hosting-tests/tests-integration/tests/target/surefire-reports",
-                                                                                   "integration/dataservice-hosting-tests/tests-integration/tests/target/logs/automation.log"],
-                                         "business-process-patches-bpel": ["integration/business-process-tests/tests-patches/bpel/target/surefire-reports"]
+                          "product-ei": {"mediation-tests-mediator-1": ["integration/mediation-tests/tests-mediator-1/target/surefire-reports",
+                                                                        "integration/mediation-tests/tests-mediator-1/target/logs/automation.log"]
                                          }
                           }
 IGNORE_DIR_TYPES = {"product-apim": [],
